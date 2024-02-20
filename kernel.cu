@@ -9,12 +9,12 @@ __constant__ float filter_c[FILTER_DIM][FILTER_DIM];
 
 __global__ void convolution_tiled_kernel(float* input, float* output, unsigned int width, unsigned int height) {
 
-    __shared__ float inputTile[IN_TILE_DIM + FILTER_DIM - 1][IN_TILE_DIM + FILTER_DIM - 1];
+    __shared__ float inputTile[TILE_SIZE + FILTER_DIM - 1][TILE_SIZE + FILTER_DIM - 1];
 
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    int row_i = row - FILTER_RADIUS;
-    int col_i = col - FILTER_RADIUS;
+    int row_o = blockIdx.y * blockDim.y + threadIdx.y;
+    int col_o = blockIdx.x * blockDim.x + threadIdx.x;
+    int row_i = row_o - FILTER_RADIUS;
+    int col_i = col_o - FILTER_RADIUS;
 
     // Load input tile to shared memory
     if (row_i >= 0 && row_i < height && col_i >= 0 && col_i < width) {
@@ -23,19 +23,18 @@ __global__ void convolution_tiled_kernel(float* input, float* output, unsigned i
         inputTile[threadIdx.y][threadIdx.x] = 0.0f;  // Boundary condition: pad with zeros
     }
 
-    __syncthreads(); 
+    __syncthreads();  // Synchronize threads to make sure all data is loaded into shared memory
 
-    float sum = 0.0f;
-    for (int i = 0; i < FILTER_DIM; ++i) {
-        for (int j = 0; j < FILTER_DIM; ++j) {
-            sum += filter_c[i][j] * inputTile[threadIdx.y + i][threadIdx.x + j];
+    // Compute convolution using shared memory tile and filter coefficients
+    if (threadIdx.y < TILE_SIZE && threadIdx.x < TILE_SIZE && row_o < height && col_o < width) {
+        float sum = 0.0f;
+        for (int filterRow = 0; filterRow < FILTER_DIM; ++filterRow) {
+            for (int filterCol = 0; filterCol < FILTER_DIM; ++filterCol) {
+                sum += filter_c_[filterRow][filterCol] * inputTile[threadIdx.y + filterRow][threadIdx.x + filterCol];
+            }
         }
-    }
-
-    // Store the result to output if within valid range
-    if (row < height && col < width) {
-        output[row * width + col] = sum;
-    }
+        output[row_o * width + col_o] = sum;
+   }
 }
 
 void copyFilterToGPU(float filter[][FILTER_DIM]) {
