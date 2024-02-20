@@ -1,4 +1,3 @@
-
 #include "common.h"
 
 #include "timer.h"
@@ -37,28 +36,17 @@ __global__ void convolution_tiled_kernel(float* input, float* output, unsigned i
     if (row < height && col < width) {
         output[row * width + col] = sum;
     }
-
-
 }
 
 void copyFilterToGPU(float filter[][FILTER_DIM]) {
-
     // Copy filter to constant memory
-
     cudaMemcpyToSymbol(filter_c, filter, FILTER_DIM * FILTER_DIM * sizeof(float));
-
 }
 
 void convolution_tiled_gpu(float* input_d, float* output_d, unsigned int width, unsigned int height) {
-
     // Call kernel
-
     dim3 numThreadsPerBlock(IN_TILE_DIM, IN_TILE_DIM);
     dim3 numBlocks((width + IN_TILE_DIM - 1) / IN_TILE_DIM, (height + IN_TILE_DIM - 1) / IN_TILE_DIM);
-
     convolution_tiled_kernel<<<numBlocks, numThreadsPerBlock>>>(input_d, output_d, width, height);
-
-
-
 }
 
