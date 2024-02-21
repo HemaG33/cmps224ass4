@@ -30,9 +30,8 @@ if (threadIdx.y < OUT_TILE_DIM && threadIdx.x < OUT_TILE_DIM) {
     float sum = 0.0f;
     for (int filterRow = 0; filterRow < FILTER_DIM; ++filterRow) {
         for (int filterCol = 0; filterCol < FILTER_DIM; ++filterCol) {
-            if ((threadIdx.y + filterRow) < OUT_TILE_DIM && (threadIdx.x + filterCol) < OUT_TILE_DIM) {
                 sum += filter_c[filterRow][filterCol] * inputTile[threadIdx.y + filterRow][threadIdx.x + filterCol];
-            }
+ 
         }
     }
     if (row_o < height && col_o < width) {
