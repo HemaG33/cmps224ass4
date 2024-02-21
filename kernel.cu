@@ -11,8 +11,8 @@ __global__ void convolution_tiled_kernel(float* input, float* output, unsigned i
 
     __shared__ float inputTile[IN_TILE_DIM + FILTER_DIM - 1][IN_TILE_DIM + FILTER_DIM - 1];
 
-    int row_o = blockIdx.y * OUT_TILE_DIM + threadIdx.y;
-    int col_o = blockIdx.x * OUT_TILE_DIM + threadIdx.x;
+    int row_o = blockIdx.y * OUT_TILE_DIM + threadIdx.y - 1;
+    int col_o = blockIdx.x * OUT_TILE_DIM + threadIdx.x - 1;
     int row_i = row_o - FILTER_RADIUS;
     int col_i = col_o - FILTER_RADIUS;
 
