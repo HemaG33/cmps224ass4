@@ -11,8 +11,8 @@ __global__ void convolution_tiled_kernel(float* input, float* output, unsigned i
 
     __shared__ float inputTile[IN_TILE_DIM + FILTER_DIM - 1][IN_TILE_DIM + FILTER_DIM - 1];
 
-    int row_o = blockIdx.y * IN_TILE_DIM + threadIdx.y;
-    int col_o = blockIdx.x * IN_TILE_DIM + threadIdx.x;
+    int row_o = blockIdx.y * OUT_TILE_DIM + threadIdx.y;
+    int col_o = blockIdx.x * OUT_TILE_DIM + threadIdx.x;
     int row_i = row_o - FILTER_RADIUS;
     int col_i = col_o - FILTER_RADIUS;
 
@@ -20,12 +20,12 @@ __global__ void convolution_tiled_kernel(float* input, float* output, unsigned i
     if (row_i >= 0 && row_i < height && col_i >= 0 && col_i < width) {
         inputTile[threadIdx.y][threadIdx.x] = input[row_i * width + col_i];
     } else {
-        inputTile[threadIdx.y][threadIdx.x] = 0.0f;  // Boundary condition: pad with zeros
+        inputTile[threadIdx.y][threadIdx.x] = 0.0f;  // Boundary condition
     }
 
     __syncthreads();  // Synchronize threads to make sure all data is loaded into shared memory
 
-    // Compute convolution using shared memory tile and filter coefficients
+
     if (threadIdx.y < IN_TILE_DIM && threadIdx.x < IN_TILE_DIM && row_o < height && col_o < width) {
         float sum = 0.0f;
         for (int filterRow = 0; filterRow < FILTER_DIM; ++filterRow) {
