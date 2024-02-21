@@ -26,7 +26,7 @@ __global__ void convolution_tiled_kernel(float* input, float* output, unsigned i
     __syncthreads();  // Synchronize threads to make sure all data is loaded into shared memory
 
 
-    if (threadIdx.y < IN_TILE_DIM && threadIdx.x < IN_TILE_DIM && row_o < height && col_o < width) {
+    if (threadIdx.y < OUT_TILE_DIM && threadIdx.x < OUT_TILE_DIM && row_o < height && col_o < width) {
         float sum = 0.0f;
         for (int filterRow = 0; filterRow < FILTER_DIM; ++filterRow) {
             for (int filterCol = 0; filterCol < FILTER_DIM; ++filterCol) {
